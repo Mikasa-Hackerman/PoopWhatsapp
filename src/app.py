@@ -6,6 +6,8 @@ import src.whatsapp_parser as wpp
 import streamlit as st
 import plotly.express as px
 from stqdm import stqdm
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 def run():
@@ -129,7 +131,8 @@ def run():
                 & (caca_df["Fecha"] <= str(fecha_fin))
             ]
 
-        st.dataframe(caca_df)
+            fecha_inicio = fecha_inicio.strftime("%d/%m/%Y")
+            fecha_fin = fecha_fin.strftime("%d/%m/%Y")
 
         caca_df["Dia"] = caca_df["Fecha"].dt.day_name()
 
@@ -175,16 +178,39 @@ def run():
             .rename(columns={0: "Recuento fecha"})
         )
 
-        fig2 = px.bar(
-            recuento_fecha,
-            x="Fecha",
-            y="Recuento fecha",
-            color="Nombre",
-            labels={"Recuento fecha": "Recuento de cacas", "Fecha": "Fecha"},
-            title="Suma de cacas por fecha y persona",
+        fig2 = make_subplots(
+            rows=len(miembros_seleccionados), cols=1, shared_xaxes=True
         )
 
+        for persona in recuento_fecha["Nombre"].unique():
+            datos_persona = recuento_fecha[recuento_fecha["Nombre"] == persona]
+            fig2.add_trace(
+                go.Scatter(
+                    x=datos_persona["Fecha"],
+                    y=datos_persona["Recuento fecha"],
+                    mode="markers+lines",
+                    name=persona,
+                ),
+                row=miembros_seleccionados.index(persona) + 1,
+                col=1,
+            )
+
         st.plotly_chart(fig2)
+
+        # recuento por persona, barras
+        recuento_persona = caca_df.groupby("Nombre").size().reset_index()
+        recuento_persona.columns = ["Nombre", "Recuento persona"]
+
+        fig3 = px.bar(
+            recuento_persona,
+            x="Nombre",
+            y="Recuento persona",
+            color="Nombre",
+            labels={"Recuento persona": "Recuento de cacas", "Nombre": "Nombre"},
+            title=f"Suma de cacas por persona desde {fecha_inicio} hasta {fecha_fin}",
+        )
+
+        st.plotly_chart(fig3)
 
     else:
         st.info("Por favor, carga un archivo de texto.")
