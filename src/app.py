@@ -134,6 +134,10 @@ def run():
             fecha_inicio = fecha_inicio.strftime("%d/%m/%Y")
             fecha_fin = fecha_fin.strftime("%d/%m/%Y")
 
+        else:
+            fecha_inicio = caca_df["Fecha"].min().strftime("%d/%m/%Y")
+            fecha_fin = caca_df["Fecha"].max().strftime("%d/%m/%Y")
+
         caca_df["Dia"] = caca_df["Fecha"].dt.day_name()
 
         recuento_dia = (
